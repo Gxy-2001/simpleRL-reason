@@ -1,5 +1,5 @@
 
-HDFS_HOME=TO_BE_DEFINED
+
 RUN_NAME=Qwen2.5-Math-7B_ppo_from_base_math_lv35
 
 python3 openrlhf/cli/train_ppo_ray_box.py \
@@ -14,8 +14,8 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --vllm_num_engines 16 \
     --vllm_tensor_parallel_size 1 \
     --colocate_actor_ref \
-    --pretrain $HDFS_HOME/model_hub/models--Qwen--Qwen2.5-Math-7B/snapshots/b101308fe89651ea5ce025f25317fea6fc07e96e \
-    --save_path $HDFS_HOME/checkpoints/$RUN_NAME \
+    --pretrain /mnt/teamdrive/model/Qwen2.5-Math-7B \
+    --save_path /mnt/teamdrive/xy/xy/sft/0202/$RUN_NAME \
     --micro_train_batch_size 2 \
     --train_batch_size 128 \
     --micro_rollout_batch_size 2 \
@@ -41,5 +41,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --load_checkpoint \
     --use_wandb YOUR_WANDB_KEY \
     --wandb_run_name $RUN_NAME \
-    --ckpt_path $HDFS_HOME/checkpoints/$RUN_NAME  \
+    --ckpt_path /mnt/teamdrive/xy/xy/sft/0202/$RUN_NAME  \
     --max_ckpt_num 20000
+
+python keepgpu.py

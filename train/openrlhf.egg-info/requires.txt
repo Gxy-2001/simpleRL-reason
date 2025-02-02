@@ -19,3 +19,9 @@ transformers==4.46.1
 transformers_stream_generator
 wandb
 wheel
+
+[vllm]
+vllm==0.6.3
+
+[vllm_latest]
+vllm>0.4.2
