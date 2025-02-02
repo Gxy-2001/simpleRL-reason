@@ -13,8 +13,8 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --vllm_num_engines 4 \
     --vllm_tensor_parallel_size 1 \
     --colocate_actor_ref \
-    --pretrain /mnt/teamdrive/model/Qwen2.5-Math-7B \
-    --save_path /mnt/teamdrive/xy/xy/sft/0202/$RUN_NAME \
+    --pretrain /mnt/lyna-selfplay/model/Qwen2.5-Math-7B \
+    --save_path /mnt/lyna-selfplay/xy/xy/sft/0202/$RUN_NAME \
     --micro_train_batch_size 1 \
     --train_batch_size 128 \
     --micro_rollout_batch_size 1 \
@@ -41,7 +41,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --load_checkpoint \
     --use_wandb TOKEN \
     --wandb_run_name $RUN_NAME \
-    --ckpt_path /mnt/teamdrive/xy/xy/sft/0202/$RUN_NAME  \
+    --ckpt_path /mnt/lyna-selfplay/xy/xy/sft/0202/$RUN_NAME  \
     --max_ckpt_num 20000
 
 python keepgpu.py
