@@ -1,6 +1,6 @@
 
 
-RUN_NAME=Qwen2.5-Math-7B_ppo_from_base_math_lv35
+RUN_NAME=4_node_Qwen2.5-Math-7B_ppo_from_base_math_lv35_100episodes
 
 python3 openrlhf/cli/train_ppo_ray_box.py \
     --ref_num_nodes 1 \
@@ -15,7 +15,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --vllm_tensor_parallel_size 1 \
     --colocate_actor_ref \
     --pretrain /mnt/lyna-selfplay/model/Qwen2.5-Math-7B \
-    --save_path /mnt/lyna-selfplay/xy/xy/sft/0202/$RUN_NAME \
+    --save_path /mnt/lyna-selfplay/xy/xy/sft/0205/$RUN_NAME \
     --micro_train_batch_size 2 \
     --train_batch_size 128 \
     --micro_rollout_batch_size 2 \
@@ -24,7 +24,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --n_samples_per_prompt 8 \
     --max_samples 100000 \
     --max_epochs 1 \
-    --num_episodes 20 \
+    --num_episodes 100 \
     --prompt_max_len 1024 \
     --generate_max_len 3000 \
     --zero_stage 3 \
@@ -39,9 +39,11 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --gradient_checkpointing \
     --save_steps 4 \
     --load_checkpoint \
-    --use_wandb YOUR_WANDB_KEY \
+    --use_wandb 32b598b4cb9a5a9f93d2698fefef0fdbb93cd859 \
+    --wandb_project openrlhf_train_ppo2 \
     --wandb_run_name $RUN_NAME \
-    --ckpt_path /mnt/lyna-selfplay/xy/xy/sft/0202/$RUN_NAME  \
+    --ckpt_path /mnt/lyna-selfplay/xy/xy/sft/0205/$RUN_NAME  \
     --max_ckpt_num 20000
 
-python keepgpu.py
+# /mnt/lyna-selfplay/xy/xy/sft/0202/4_node_Qwen2.5-Math-7B_ppo_from_base_math_lv35
+# python keepgpu.py
