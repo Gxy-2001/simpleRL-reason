@@ -1,6 +1,6 @@
-
-HDFS_HOME=TO_BE_DEFINED
-RUN_NAME=Qwen2.5-Math-7B_ppo_from_base_math_lv35
+WANDB_KEY=$1
+TIME_STAMP=$(date +"%Y%m%d_%H%M%S")
+RUN_NAME=multians_4node_Qwen2.5-Math-7B_ppo_from_base_math_lv35_1_node_$TIME_STAMP
 
 python3 openrlhf/cli/train_ppo_ray_box.py \
     --ref_num_nodes 1 \
@@ -14,8 +14,8 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --vllm_num_engines 16 \
     --vllm_tensor_parallel_size 1 \
     --colocate_actor_ref \
-    --pretrain $HDFS_HOME/model_hub/models--Qwen--Qwen2.5-Math-7B/snapshots/b101308fe89651ea5ce025f25317fea6fc07e96e \
-    --save_path $HDFS_HOME/checkpoints/$RUN_NAME \
+    --pretrain /mnt/teamdrive/model/Qwen2.5-Math-7B \
+    --save_path /mnt/teamdrive/yujian/checkpoints/$RUN_NAME \
     --micro_train_batch_size 2 \
     --train_batch_size 128 \
     --micro_rollout_batch_size 2 \
@@ -32,14 +32,14 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --actor_learning_rate 5e-7 \
     --critic_learning_rate 9e-6 \
     --init_kl_coef 0.01 \
-    --prompt_data  data/math_level3to5_data_processed_with_qwen_prompt.json \
+    --prompt_data  data/math_level3to5_data_processed_with_qwen_prompt_transed2multians.json \
     --input_key input \
     --normalize_reward \
     --flash_attn \
     --gradient_checkpointing \
     --save_steps 4 \
     --load_checkpoint \
-    --use_wandb YOUR_WANDB_KEY \
+    --use_wandb $WANDB_KEY \
     --wandb_run_name $RUN_NAME \
-    --ckpt_path $HDFS_HOME/checkpoints/$RUN_NAME  \
+    --ckpt_path /mnt/teamdrive/yujian/checkpoints/$RUN_NAME \
     --max_ckpt_num 20000
