@@ -654,9 +654,11 @@ def preprocess_code_response_for_qwen_prompt(sequence, answer, testing_workers=1
         code = model_output.split("\n```python")[-1].split("\n```")[0].strip()
     else:
         box_match = -1.0
+        return "", box_match
 
     if len(code) == 0:
         box_match = -1.0
+        return "", box_match
 
     if "input_output" in answer:  # taco_style
         res_tmp, pass_flag = taco_style_test(
