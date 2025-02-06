@@ -225,7 +225,7 @@ class PPOTrainerPRM800K_BOX(ABC):
             )
 
             for rand_prompts in self.prompts_dataloader:
-                rand_targets = rand_prompts["target"]
+                # rand_targets = rand_prompts["target"]
                 rand_answer = rand_prompts["answer"]
                 rand_prompts = rand_prompts["input"]
                 
