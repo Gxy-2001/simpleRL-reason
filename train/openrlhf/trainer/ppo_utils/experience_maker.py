@@ -581,18 +581,19 @@ def preprocess_box_response_for_qwen_prompt(sequence, answer):
         if stop_word in model_output:
             model_output = model_output.split(stop_word)[0].strip()
 
-    multi_answer_score = 0.0
-    if "<answer>" in model_output:
-        multi_answer_count = model_output.count("<answer>")
-        multi_answer_score = min(0.001 * multi_answer_count, 0.005)
+    # ## multians
+    # multi_answer_score = 0.0
+    # if "<answer>" in model_output:
+    #     multi_answer_count = model_output.count("<answer>")
+    #     multi_answer_score = min(0.001 * multi_answer_count, 0.005)
 
-    final_answer_score = 0.0
-    if "<final_answer>" in model_output:
-        if model_output.count("<final_answer>") > 1:
-            final_answer_score = 0.01
-        else:
-            final_answer_score = 0.05
-    model_output = model_output.split("<final_answer>")[-1].split("</final_answer>")[0].strip()
+    # final_answer_score = 0.0
+    # if "<final_answer>" in model_output:
+    #     if model_output.count("<final_answer>") > 1:
+    #         final_answer_score = 0.01
+    #     else:
+    #         final_answer_score = 0.05
+    # model_output = model_output.split("<final_answer>")[-1].split("</final_answer>")[0].strip()
 
 
     extract_answer = qwen_extract_answer(model_output, data_name="math") #TODO: check the data_name, hard code here for now
@@ -631,8 +632,9 @@ def preprocess_box_response_for_qwen_prompt(sequence, answer):
         
     if "boxed" not in model_output:
         box_match = -1.0
-        
-    box_match = box_match + multi_answer_score + final_answer_score
+    
+    # ## multians
+    # box_match = box_match + multi_answer_score + final_answer_score
 
     return "", box_match
 
