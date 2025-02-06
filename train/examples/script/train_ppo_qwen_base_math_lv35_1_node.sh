@@ -43,4 +43,5 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --use_wandb $WANDB_KEY \
     --wandb_run_name $RUN_NAME \
     --ckpt_path /mnt/teamdrive/yujian/checkpoints/$RUN_NAME \
-    --max_ckpt_num 20000
+    --max_ckpt_num 20000 \
+    --perf
