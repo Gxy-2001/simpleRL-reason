@@ -650,7 +650,7 @@ def preprocess_code_response_for_qwen_prompt(sequence, answer, testing_workers=1
         if stop_word in model_output:
             model_output = model_output.split(stop_word)[0].strip()
 
-    if "```python" in answer:
+    if "```python" in model_output:
         code = model_output.split("\n```python")[-1].split("\n```")[0].strip()
     else:
         box_match = -1.0
