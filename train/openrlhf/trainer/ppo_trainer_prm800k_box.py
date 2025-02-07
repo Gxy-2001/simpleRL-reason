@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import ray
 import torch
 import torch.nn as nn
+from copy import deepcopy
 from torch import Tensor
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
@@ -487,6 +488,8 @@ class PPOTrainerPRM800K_BOX(ABC):
                 }
                 if self.experience_maker.perf_stats is not None:
                     logs.update({f"perf/experience_maker/{k}": v for k, v in self.experience_maker.perf_stats.items()})
+                if "example_table" in self.experience_maker.__dict__:
+                    logs["example_table"] = deepcopy(self.experience_maker.example_table)
                 self._wandb.log(logs)
             # TensorBoard
             elif self._tensorboard is not None and self.strategy.is_rank_0():
