@@ -6,11 +6,11 @@ RUN_NAME=multians_4node_Qwen2.5-Math-7B_ppo_from_base_math_lv35_1_node_$TIME_STA
 
 python3 openrlhf/cli/train_ppo_ray_box.py \
     --ref_num_nodes 1 \
-    --ref_num_gpus_per_node 2 \
+    --ref_num_gpus_per_node 4 \
     --reward_num_nodes 0 \
     --reward_num_gpus_per_node 0 \
-    --critic_num_nodes 1 \
-    --critic_num_gpus_per_node 2 \
+    --critic_num_nodes 0 \
+    --critic_num_gpus_per_node 0 \
     --actor_num_nodes 1 \
     --actor_num_gpus_per_node 2 \
     --vllm_num_engines 4 \
@@ -35,7 +35,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --actor_learning_rate 5e-7 \
     --critic_learning_rate 9e-6 \
     --init_kl_coef 0.01 \
-    --prompt_data  data/math_40k.json \
+    --prompt_data  data/math_level3to5_data_processed_with_qwen_prompt.json \
     --input_key input \
     --normalize_reward \
     --flash_attn \
