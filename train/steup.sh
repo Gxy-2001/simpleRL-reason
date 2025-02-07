@@ -11,8 +11,10 @@
 # # 10.6.37.72:6379
 # ray start --address=10.6.37.72:6379 --num-gpus=8
 
+# ray job submit --address="http://127.0.0.1:8265" \
+#     -- bash examples/script/train_ppo_qwen_base_math_lv35_new.sh
 ray job submit --address="http://127.0.0.1:8265" \
-    -- bash examples/script/train_ppo_qwen_base_math_lv35_new.sh
+    -- bash examples/script/grpo_1node.sh
 # ray job submit --address="http://127.0.0.1:8265" \
 #     -- echo hello
 

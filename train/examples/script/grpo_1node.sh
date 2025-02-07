@@ -1,6 +1,6 @@
-WANDB_KEY=32b598b4cb9a5a9f93d2698fefef0fdbb93cd859
+WANDB_KEY="32b598b4cb9a5a9f93d2698fefef0fdbb93cd859"
 TIME_STAMP=$(date +"%Y%m%d_%H%M%S")
-RUN_NAME=grpo_4node_Qwen2.5-Math-7B_ppo_from_base_math_lv35_1_node_$TIME_STAMP
+RUN_NAME=multians_4node_Qwen2.5-Math-7B_ppo_from_base_math_lv35_1_node_$TIME_STAMP
 
 # RUN_NAME=Qwen2.5-Math-7B_ppo_from_base_math_lv35
 
@@ -18,6 +18,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --colocate_actor_ref \
     --pretrain /mnt/teamdrive/model/Qwen2.5-Math-7B \
     --save_path /mnt/teamdrive/xy/xy/sft/0202/$RUN_NAME \
+    --advantage_estimator group_norm \
     --micro_train_batch_size 1 \
     --train_batch_size 128 \
     --micro_rollout_batch_size 1 \
@@ -34,7 +35,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --actor_learning_rate 5e-7 \
     --critic_learning_rate 9e-6 \
     --init_kl_coef 0.01 \
-    --prompt_data  data/math_level3to5_data_processed_with_qwen_prompt.json \
+    --prompt_data  data/math_40k.json \
     --input_key input \
     --normalize_reward \
     --flash_attn \
@@ -44,7 +45,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --load_checkpoint \
     --use_wandb $WANDB_KEY \
     --wandb_run_name $RUN_NAME \
-    --ckpt_path /mnt/teamdrive/xy/xy/sft/0205/$RUN_NAME  \
+    --ckpt_path /mnt/teamdrive/xy/xy/sft/0202/$RUN_NAME  \
     --max_ckpt_num 20000 \
     --perf
 
