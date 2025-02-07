@@ -19,6 +19,9 @@ transformers==4.46.1
 transformers_stream_generator
 wandb
 wheel
+latex2sympy2
+timeout_decorator
+word2number
 
 [vllm]
 vllm==0.6.3

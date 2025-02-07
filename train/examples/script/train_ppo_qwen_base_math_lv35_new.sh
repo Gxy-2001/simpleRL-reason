@@ -43,7 +43,8 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --wandb_project openrlhf_train_ppo2 \
     --wandb_run_name $RUN_NAME \
     --ckpt_path /mnt/lyna-selfplay/xy/xy/sft/0205/$RUN_NAME  \
-    --max_ckpt_num 20000
+    --max_ckpt_num 20000 \
+    --perf
 
 # /mnt/lyna-selfplay/xy/xy/sft/0202/4_node_Qwen2.5-Math-7B_ppo_from_base_math_lv35
 # python keepgpu.py

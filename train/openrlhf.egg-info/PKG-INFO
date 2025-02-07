@@ -30,6 +30,9 @@ Requires-Dist: transformers==4.46.1
 Requires-Dist: transformers_stream_generator
 Requires-Dist: wandb
 Requires-Dist: wheel
+Requires-Dist: latex2sympy2
+Requires-Dist: timeout_decorator
+Requires-Dist: word2number
 Provides-Extra: vllm
 Requires-Dist: vllm==0.6.3; extra == "vllm"
 Provides-Extra: vllm-latest
