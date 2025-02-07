@@ -1,5 +1,8 @@
+WANDB_KEY=$1
+TIME_STAMP=$(date +"%Y%m%d_%H%M%S")
+RUN_NAME=multians_4node_Qwen2.5-Math-7B_ppo_from_base_math_lv35_1_node_$TIME_STAMP
 
-RUN_NAME=Qwen2.5-Math-7B_ppo_from_base_math_lv35
+# RUN_NAME=Qwen2.5-Math-7B_ppo_from_base_math_lv35
 
 python3 openrlhf/cli/train_ppo_ray_box.py \
     --ref_num_nodes 1 \
@@ -31,7 +34,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --actor_learning_rate 5e-7 \
     --critic_learning_rate 9e-6 \
     --init_kl_coef 0.01 \
-    --prompt_data  data/math_level3to5_data_processed_with_qwen_prompt.json \
+    --prompt_data  data/math_level3to5_data_processed_with_qwen_prompt_transed2multians.json \
     --input_key input \
     --normalize_reward \
     --flash_attn \
@@ -39,7 +42,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --gradient_checkpointing \
     --save_steps 4 \
     --load_checkpoint \
-    --use_wandb TOKEN \
+    --use_wandb $WANDB_KEY \
     --wandb_run_name $RUN_NAME \
     --ckpt_path /mnt/lyna-selfplay/xy/xy/sft/0202/$RUN_NAME  \
     --max_ckpt_num 20000

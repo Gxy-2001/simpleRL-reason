@@ -5,7 +5,11 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Generator, List, Optional, Tuple, Union
 
+from .code_test.taco.metrics.testing_util import run_test as taco_style_test
+from .code_test.test import test_single_code as codecontests_style_test
+
 import ray
+import wandb
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -580,6 +584,22 @@ def preprocess_box_response_for_qwen_prompt(sequence, answer):
     for stop_word in stop_words:
         if stop_word in model_output:
             model_output = model_output.split(stop_word)[0].strip()
+
+    # ## multians
+    # multi_answer_score = 0.0
+    # if "<answer>" in model_output:
+    #     multi_answer_count = model_output.count("<answer>")
+    #     multi_answer_score = min(0.001 * multi_answer_count, 0.005)
+
+    # final_answer_score = 0.0
+    # if "<final_answer>" in model_output:
+    #     if model_output.count("<final_answer>") > 1:
+    #         final_answer_score = 0.01
+    #     else:
+    #         final_answer_score = 0.05
+    # model_output = model_output.split("<final_answer>")[-1].split("</final_answer>")[0].strip()
+
+
     extract_answer = qwen_extract_answer(model_output, data_name="math") #TODO: check the data_name, hard code here for now
     
     
@@ -616,10 +636,56 @@ def preprocess_box_response_for_qwen_prompt(sequence, answer):
         
     if "boxed" not in model_output:
         box_match = -1.0
-        
+    
+    # ## multians
+    # box_match = box_match + multi_answer_score + final_answer_score
 
-    return "", box_match
+    return extract_answer, box_match
 
+
+def preprocess_code_response_for_qwen_prompt(sequence, answer, testing_workers=16, testing_timeout=4):
+    model_output= re.sub(r'^.*?<\|im_start\|>assistant', '<|im_start|>assistant', sequence, flags=re.DOTALL,count = 1)
+    stop_words = ["</s>", "<|im_end|>", "<|endoftext|>"] 
+    for stop_word in stop_words:
+        if stop_word in model_output:
+            model_output = model_output.split(stop_word)[0].strip()
+
+    if "```python" in answer:
+        code = model_output.split("\n```python")[-1].split("\n```")[0].strip()
+    else:
+        box_match = -1.0
+        return "NO ```python", box_match
+
+    if len(code) == 0:
+        box_match = -1.0
+        return "LEN(CODE) is 0", box_match
+
+    if "input_output" in answer:  # taco_style
+        res_tmp, pass_flag = taco_style_test(
+            {"input_output": answer["input_output"]},
+            test=code,
+            testing_workers=testing_workers,
+            testing_timeout=testing_timeout,
+        )
+    elif "public_tests" in answer:  # codecontests_style
+        pass_flag, res_tmp, _ = codecontests_style_test(
+            tags={},
+            code=code,
+            tests={
+                "public_tests": answer["public_tests"],
+                "private_tests": answer["private_tests"],
+                "generated_tests": answer["generated_tests"],
+            },
+            testing_workers=testing_workers,
+            timeout=testing_timeout,
+        )
+    
+    if pass_flag:
+        box_match = 1.0
+    else:
+        box_match = -0.5
+
+    return code, box_match
 
 
 def preprocess_orm_reward(queries, tokenizer, **generate_kwargs):
@@ -3658,6 +3724,10 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
         self.vllm_engines = vllm_engines
         self.packing_samples = packing_samples
 
+        self.call_idx = 0
+        self.example_flag = False
+        self.example_table = wandb.Table(columns=["step", "example", "extracted", "label", "score"])
+
     @torch.no_grad()
     def make_experience_list(self, all_prompts: Union[str, List[str]], all_answers:  Union[str, List[str]], **generate_kwargs) -> List[Experience]:
         if self.strategy.args.perf:
@@ -3666,6 +3736,10 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
                 "actor_value_rm_time": 0,
                 "wait_time": 0,
             }
+
+        self.call_idx += 1
+        self.example_flag = True
+
         experiences = super().make_experience_list(all_prompts, all_answers, **generate_kwargs)
         if self.critic is not None:
             for experience in experiences:
@@ -3755,7 +3829,23 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
                 
                 ## I will change the response rule-match reward. For my own experiment. By weihao, 12.25 2024
                 # query, box_match = preprocess_box_responsev4(query, answer) # original processing func 
-                query, box_match = preprocess_box_response_for_qwen_prompt(query, answer)
+                if isinstance(answer, str): # math box
+                    if len(box_match_list) == 0:
+                        print("math reward")
+                    extracted_querry, box_match = preprocess_box_response_for_qwen_prompt(query, answer)
+                else: # code
+                    if len(box_match_list) == 0:
+                        print("code reward")
+                    extracted_querry, box_match = preprocess_code_response_for_qwen_prompt(query, answer)
+                if self.example_flag:
+                    self.example_table.add_data(
+                        self.call_idx,
+                        query,
+                        extracted_querry,
+                        answer if isinstance(answer, str) else "NA:<",
+                        box_match
+                    )
+                    self.example_flag = False
                 #query_v1, equal_match = preprocess_box_responsev1(temp_query, answer)
                 processed_queries.append(query)
                 box_match_list.append(box_match)

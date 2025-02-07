@@ -30,12 +30,19 @@ def preprocess_data_box(data, input_template=None, input_key="input", apply_chat
         prompt = apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
     else:
         prompt = data[input_key]
-        
-        truth_answer = data["ground_truth_answer"]
-        target = data["target"]
-        if input_template:
-            prompt = input_template.format(prompt)
-        return {"input": prompt, "target": target, "answer": truth_answer}
+
+        if "ground_truth_answer" in data: # simple rl math data
+            truth_answer = data["ground_truth_answer"]
+            # target = data["target"]
+            if input_template:
+                prompt = input_template.format(prompt)
+            # return {"input": prompt, "target": target, "answer": truth_answer}
+            return {"input": prompt, "answer": truth_answer}
+        else:
+            return {
+                "input": prompt,
+                "answer": data["answer"]
+            }
     return prompt
 
 
@@ -763,8 +770,13 @@ class ActorModelRayActorBOX(BasePPORole):
         self.prompts_dataset = PromptDatasetBox(
             prompts_data, self.tokenizer, strategy, input_template=args.input_template
         )
+        def collate_fn_1(data_in):
+            collated_data = {}
+            for key in data_in[0].keys():
+                collated_data[key] = [d[key] for d in data_in]
+            return collated_data
         self.prompts_dataloader = strategy.setup_dataloader(
-            self.prompts_dataset, args.rollout_batch_size // strategy.world_size, True, True
+            self.prompts_dataset, args.rollout_batch_size // strategy.world_size, True, True, collate_fn=collate_fn_1
         )
 
         if args.pretrain_data:
