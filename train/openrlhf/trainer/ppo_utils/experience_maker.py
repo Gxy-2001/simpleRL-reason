@@ -3725,6 +3725,7 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
         self.packing_samples = packing_samples
 
         self.call_idx = 0
+        self.example_flag = False
         self.example_table = wandb.Table(columns=["step", "example", "extracted", "label", "score"])
 
     @torch.no_grad()
@@ -3737,6 +3738,7 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
             }
 
         self.call_idx += 1
+        self.example_flag = True
 
         experiences = super().make_experience_list(all_prompts, all_answers, **generate_kwargs)
         if self.critic is not None:
@@ -3835,7 +3837,7 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
                     if len(box_match_list) == 0:
                         print("code reward")
                     extracted_querry, box_match = preprocess_code_response_for_qwen_prompt(query, answer)
-                if len(box_match_list) == 0:
+                if self.example_flag:
                     self.example_table.add_data(
                         self.call_idx,
                         query,
@@ -3843,6 +3845,7 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
                         answer if isinstance(answer, str) else "NA:<",
                         box_match
                     )
+                    self.example_flag = False
                 #query_v1, equal_match = preprocess_box_responsev1(temp_query, answer)
                 processed_queries.append(query)
                 box_match_list.append(box_match)
