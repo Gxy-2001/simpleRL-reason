@@ -640,7 +640,7 @@ def preprocess_box_response_for_qwen_prompt(sequence, answer):
     # ## multians
     # box_match = box_match + multi_answer_score + final_answer_score
 
-    return "", box_match
+    return extract_answer, box_match
 
 
 def preprocess_code_response_for_qwen_prompt(sequence, answer, testing_workers=16, testing_timeout=4):
@@ -654,11 +654,11 @@ def preprocess_code_response_for_qwen_prompt(sequence, answer, testing_workers=1
         code = model_output.split("\n```python")[-1].split("\n```")[0].strip()
     else:
         box_match = -1.0
-        return "", box_match
+        return "NO ```python", box_match
 
     if len(code) == 0:
         box_match = -1.0
-        return "", box_match
+        return "LEN(CODE) is 0", box_match
 
     if "input_output" in answer:  # taco_style
         res_tmp, pass_flag = taco_style_test(
@@ -685,7 +685,7 @@ def preprocess_code_response_for_qwen_prompt(sequence, answer, testing_workers=1
     else:
         box_match = -0.5
 
-    return "", box_match
+    return code, box_match
 
 
 def preprocess_orm_reward(queries, tokenizer, **generate_kwargs):
@@ -3725,7 +3725,7 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
         self.packing_samples = packing_samples
 
         self.call_idx = 0
-        self.example_table = wandb.Table(columns=["step", "example", "label", "score"])
+        self.example_table = wandb.Table(columns=["step", "example", "extracted", "label", "score"])
 
     @torch.no_grad()
     def make_experience_list(self, all_prompts: Union[str, List[str]], all_answers:  Union[str, List[str]], **generate_kwargs) -> List[Experience]:
@@ -3830,15 +3830,16 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
                 if isinstance(answer, str): # math box
                     if len(box_match_list) == 0:
                         print("math reward")
-                    _, box_match = preprocess_box_response_for_qwen_prompt(query, answer)
+                    extracted_querry, box_match = preprocess_box_response_for_qwen_prompt(query, answer)
                 else: # code
                     if len(box_match_list) == 0:
                         print("code reward")
-                    _, box_match = preprocess_code_response_for_qwen_prompt(query, answer)
+                    extracted_querry, box_match = preprocess_code_response_for_qwen_prompt(query, answer)
                 if len(box_match_list) == 0:
                     self.example_table.add_data(
                         self.call_idx,
                         query,
+                        extracted_querry,
                         answer if isinstance(answer, str) else "NA:<",
                         box_match
                     )
