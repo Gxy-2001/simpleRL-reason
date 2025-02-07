@@ -584,7 +584,7 @@ def preprocess_box_response_for_qwen_prompt(sequence, answer):
     for stop_word in stop_words:
         if stop_word in model_output:
             model_output = model_output.split(stop_word)[0].strip()
-
+    res_content = model_output
     # ## multians
     # multi_answer_score = 0.0
     # if "<answer>" in model_output:
@@ -640,7 +640,7 @@ def preprocess_box_response_for_qwen_prompt(sequence, answer):
     # ## multians
     # box_match = box_match + multi_answer_score + final_answer_score
 
-    return extract_answer, box_match
+    return extract_answer, box_match, res_content
 
 
 def preprocess_code_response_for_qwen_prompt(sequence, answer, testing_workers=16, testing_timeout=4):
@@ -649,16 +649,17 @@ def preprocess_code_response_for_qwen_prompt(sequence, answer, testing_workers=1
     for stop_word in stop_words:
         if stop_word in model_output:
             model_output = model_output.split(stop_word)[0].strip()
+    res_content = model_output
 
     if "```python" in model_output:
         code = model_output.split("\n```python")[-1].split("\n```")[0].strip()
     else:
         box_match = -1.0
-        return "NO ```python", box_match
+        return "NO ```python", box_match, res_content
 
     if len(code) == 0:
         box_match = -1.0
-        return "LEN(CODE) is 0", box_match
+        return "LEN(CODE) is 0", box_match, res_content
 
     if "input_output" in answer:  # taco_style
         res_tmp, pass_flag = taco_style_test(
@@ -685,7 +686,7 @@ def preprocess_code_response_for_qwen_prompt(sequence, answer, testing_workers=1
     else:
         box_match = -0.5
 
-    return code, box_match
+    return code, box_match, res_content
 
 
 def preprocess_orm_reward(queries, tokenizer, **generate_kwargs):
@@ -3726,6 +3727,7 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
 
         self.call_idx = 0
         self.example_flag = False
+        self.content_stat = {}
         self.example_table = wandb.Table(columns=["step", "example", "extracted", "label", "score"])
 
     @torch.no_grad()
@@ -3739,6 +3741,23 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
 
         self.call_idx += 1
         self.example_flag = True
+
+        self.content_stat = {
+            "total_num": 0,
+            "correct_num": 0,
+
+            "res_token_0~1k": 0,
+            "res_token_1~2k": 0,
+            "res_token_2~3k": 0,
+            "res_token_3~4k": 0,
+            "res_token_4k~": 0,
+        }
+        self.keywords = [
+            "wait", "check again", "re-evaluate", "re-examine", "recheck", "reevaluat", "rethink", "think again", "try again"
+        ]
+        for keyword in self.keywords:
+            self.content_stat[f"{keyword}_num"] = 0
+            self.content_stat[f"{keyword}_count"] = 0
 
         experiences = super().make_experience_list(all_prompts, all_answers, **generate_kwargs)
         if self.critic is not None:
@@ -3830,13 +3849,34 @@ class RemoteExperienceMakerBOX(NaiveExperienceMakerBOX):
                 ## I will change the response rule-match reward. For my own experiment. By weihao, 12.25 2024
                 # query, box_match = preprocess_box_responsev4(query, answer) # original processing func 
                 if isinstance(answer, str): # math box
-                    if len(box_match_list) == 0:
-                        print("math reward")
-                    extracted_querry, box_match = preprocess_box_response_for_qwen_prompt(query, answer)
+                    # if len(box_match_list) == 0:
+                    #     print("math reward")
+                    extracted_querry, box_match, res_content = preprocess_box_response_for_qwen_prompt(query, answer)
                 else: # code
-                    if len(box_match_list) == 0:
-                        print("code reward")
-                    extracted_querry, box_match = preprocess_code_response_for_qwen_prompt(query, answer)
+                    # if len(box_match_list) == 0:
+                    #     print("code reward")
+                    extracted_querry, box_match, res_content = preprocess_code_response_for_qwen_prompt(query, answer)
+                
+                self.content_stat["total_num"] += 1
+                res_token_num = len(self.tokenizer.tokenize(res_content))
+                if res_token_num < 1000:
+                    self.content_stat["res_token_0~1k"] += 1
+                elif res_token_num < 2000:
+                    self.content_stat["res_token_1~2k"] += 1
+                elif res_token_num < 3000:
+                    self.content_stat["res_token_2~3k"] += 1
+                elif res_token_num < 4000:
+                    self.content_stat["res_token_3~4k"] += 1
+                else:
+                    self.content_stat["res_token_4k~"] += 1
+                
+                if box_match == 1:
+                    self.content_stat["correct_num"] += 1
+                for keyword in self.keywords:
+                    if keyword in res_content:
+                        self.content_stat[f"{keyword}_num"] += 1
+                        self.content_stat[f"{keyword}_count"] += res_content.count(keyword)
+
                 if self.example_flag:
                     self.example_table.add_data(
                         self.call_idx,

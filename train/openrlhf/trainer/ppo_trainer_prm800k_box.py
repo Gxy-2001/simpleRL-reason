@@ -173,6 +173,7 @@ class PPOTrainerPRM800K_BOX(ABC):
 
             wandb.define_metric("train/global_step")
             wandb.define_metric("train/*", step_metric="train/global_step", step_sync=True)
+            wandb.define_metric("content_stat/*", step_metric="train/global_step", step_sync=True)
             wandb.define_metric("eval/epoch")
             wandb.define_metric("eval/*", step_metric="eval/epoch", step_sync=True)
 
@@ -490,6 +491,11 @@ class PPOTrainerPRM800K_BOX(ABC):
                     logs.update({f"perf/experience_maker/{k}": v for k, v in self.experience_maker.perf_stats.items()})
                 if "example_table" in self.experience_maker.__dict__:
                     logs["example_table"] = deepcopy(self.experience_maker.example_table)
+                if "content_stat" in self.experience_maker.__dict__:
+                    logs.update({
+                        f"content_stat/{k}": v
+                        for k, v in self.experience_maker.content_stat.items()
+                    })
                 self._wandb.log(logs)
             # TensorBoard
             elif self._tensorboard is not None and self.strategy.is_rank_0():
