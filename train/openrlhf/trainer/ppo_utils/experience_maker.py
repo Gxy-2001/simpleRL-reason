@@ -3097,7 +3097,7 @@ class NaiveExperienceMakerBOX(ABC):
                     generate_kwargs["gamma"],
                     generate_kwargs["lambd"],
                 )
-            elif self.advantage_estimator == "reinforce":
+            elif self.advantage_estimator in ["reinforce", "group_norm"]:
                 experience.returns = self.get_cumulative_returns(
                     reward,
                     experience.action_mask,

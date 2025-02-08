@@ -1,7 +1,7 @@
 WANDB_KEY="32b598b4cb9a5a9f93d2698fefef0fdbb93cd859"
 TIME_STAMP=$(date +"%Y%m%d_%H%M%S")
 RUN_NAME=multians_4node_Qwen2.5-Math-7B_ppo_from_base_math_lv35_1_node_$TIME_STAMP
-
+export WANDB_RUN_ID=$(date +"%Y%m%d_%H%M%S")
 # RUN_NAME=Qwen2.5-Math-7B_ppo_from_base_math_lv35
 
 python3 openrlhf/cli/train_ppo_ray_box.py \
@@ -12,7 +12,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --critic_num_nodes 0 \
     --critic_num_gpus_per_node 0 \
     --actor_num_nodes 1 \
-    --actor_num_gpus_per_node 2 \
+    --actor_num_gpus_per_node 4 \
     --vllm_num_engines 4 \
     --vllm_tensor_parallel_size 1 \
     --colocate_actor_ref \
@@ -21,7 +21,7 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --advantage_estimator group_norm \
     --micro_train_batch_size 1 \
     --train_batch_size 128 \
-    --micro_rollout_batch_size 1 \
+    --micro_rollout_batch_size 2 \
     --rollout_batch_size 1024 \
     --temperature 0.6 \
     --n_samples_per_prompt 8 \
@@ -49,4 +49,4 @@ python3 openrlhf/cli/train_ppo_ray_box.py \
     --max_ckpt_num 20000 \
     --perf
 
-python keepgpu.py
+# python keepgpu.py
